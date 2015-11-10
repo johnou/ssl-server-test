@@ -57,20 +57,20 @@ public class ServerMain {
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline pipeline = socketChannel.pipeline();
                 pipeline.addLast(new SslMessageDecoder(sslContext));
-                pipeline.addLast(new LineBasedFrameDecoder(1024));
+                pipeline.addLast(new LineBasedFrameDecoder(32));
                 pipeline.addLast(new StringDecoder(UTF8));
                 pipeline.addLast(new StringEncoder(UTF8));
                 pipeline.addLast(new SimpleChannelInboundHandler<String>() {
                     @Override
-                    protected void channelRead0(ChannelHandlerContext ctx, String s) throws Exception {
-                        ctx.writeAndFlush("ACK " + s + "\n");
-                        logger.info("Acknowledged: " + s);
+                    protected void channelRead0(ChannelHandlerContext context, String s) throws Exception {
+                        logger.info("Received: " + s);
+                        context.writeAndFlush(s + '\n');
                     }
 
                     @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                        logger.error("Unexpected exception", cause);
-                        ctx.close();
+                    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) throws Exception {
+                        logger.error(context.channel() + ": unexpected exception", cause);
+                        context.close();
                     }
                 });
             }

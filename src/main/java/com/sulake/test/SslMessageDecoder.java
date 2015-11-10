@@ -6,6 +6,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslHandler;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ import java.util.List;
  * @author Johno Crawford (johno@sulake.com)
  */
 public class SslMessageDecoder extends ByteToMessageDecoder {
+
+    private static final Logger logger = Logger.getLogger(SslMessageDecoder.class);
 
     private final SslContext sslContext;
 
@@ -28,8 +31,10 @@ public class SslMessageDecoder extends ByteToMessageDecoder {
             return;
         }
         if (SslHandler.isEncrypted(in)) {
+            logger.info("Enabling encryption for " + context.channel());
             enableSsl(context);
         } else {
+            logger.info("No encryption for " + context.channel());
             context.pipeline().remove(this);
         }
     }

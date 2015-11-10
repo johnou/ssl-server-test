@@ -12,6 +12,9 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.handler.timeout.IdleStateHandler;
 import org.apache.log4j.Logger;
 
 import javax.net.ssl.SSLException;
@@ -25,6 +28,8 @@ import java.security.cert.CertificateException;
 public class ServerMain {
 
     private static final Logger logger = Logger.getLogger(ServerMain.class);
+
+    private static final int MAX_READ_IDLE_SECONDS = 60;
 
     private Channel serverChannel;
 
@@ -56,6 +61,7 @@ public class ServerMain {
             @Override
             protected void initChannel(SocketChannel socketChannel) throws Exception {
                 ChannelPipeline pipeline = socketChannel.pipeline();
+                pipeline.addLast(new IdleStateHandler(MAX_READ_IDLE_SECONDS, 0, 0));
                 pipeline.addLast(new SslMessageDecoder(sslContext));
                 pipeline.addLast(new LineBasedFrameDecoder(32));
                 pipeline.addLast(new StringDecoder(UTF8));
@@ -65,6 +71,17 @@ public class ServerMain {
                     protected void channelRead0(ChannelHandlerContext context, String s) throws Exception {
                         logger.info("Received: " + s);
                         context.writeAndFlush(s + '\n');
+                    }
+
+                    @Override
+                    public void userEventTriggered(ChannelHandlerContext context, Object event) {
+                        if (event instanceof IdleStateEvent) {
+                            IdleStateEvent e = (IdleStateEvent) event;
+                            if (e.state() == IdleState.READER_IDLE) {
+                                logger.info("Dropping " + context.channel() + " due to read timeout");
+                                context.close();
+                            }
+                        }
                     }
 
                     @Override

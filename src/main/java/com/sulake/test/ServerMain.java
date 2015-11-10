@@ -120,15 +120,21 @@ public class ServerMain {
     }
 
     public static void main(String[] args) throws InterruptedException, SSLException, CertificateException {
-        final ServerMain server = new ServerMain();
-        ChannelFuture future = server.start(new InetSocketAddress(8888));
+        System.setProperty("javax.net.debug", "all");
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                server.destroy();
-            }
-        });
-        future.channel().closeFuture().syncUninterruptibly();
+        try {
+            final ServerMain server = new ServerMain();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    server.destroy();
+                }
+            });
+            ChannelFuture future = server.start(new InetSocketAddress(8888));
+            future.channel().closeFuture().syncUninterruptibly();
+        } catch (Throwable throwable) {
+            logger.fatal("Fatal error starting application", throwable);
+            System.exit(1);
+        }
     }
 }

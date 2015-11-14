@@ -54,6 +54,7 @@ nioEventLoopGroup-3-1, closeInboundInternal()
 
 Turns out there was an undocumented exception being thrown in the SSL authenticated callback which was being swallowed..
 
+```
 11-11 01:12:50.858 25012 25139 I Unity : NullReferenceException: Object reference not set to an instance of an object
 11-11 01:12:50.858 25012 25139 I Unity : at Mono.Security.X509.X509Certificate.get_Hash () [0x00000] in :0
 11-11 01:12:50.858 25012 25139 I Unity : at Mono.Security.X509.X509Certificate.VerifySignature (System.Security.Cryptography.RSA rsa) [0x00000] in :0
@@ -63,6 +64,7 @@ Turns out there was an undocumented exception being thrown in the SSL authentica
 11-11 01:12:50.858 25012 25139 I Unity : at System.Security.Cryptography.X509Certificates.X509Chain.Process (Int32 n) [0x00000] in :0
 11-11 01:12:50.858 25012 25139 I Unity : at System.Security.Cryptography.X509Certificates.X509Chain.ValidateChain (X509ChainStatusFlags flag) [0x00000] in :0
 11-11 01:12:50.858 25012 25139 I Unity : at System.Security.Cryptography.X509Certificates.X509Chain.Build (System.Security.Cryptograp
+```
 
 This is caused by "Strip Bytecode" in Unity publish settings and only affects Android. The fix was to add the following in link.xml.
 
